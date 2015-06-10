@@ -64,10 +64,18 @@ function show_password_fields($value, $profile)
 	return !isset($profile) ;
 }
 
+function authenticate($user, $username, $password)
+{
+	// TODO: use query_var instead
+	if(isset($_GET['provider']))
+		return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: Login failed, please try again')) ;
+}
+
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_form',__NAMESPACE__.'\login_form') ;
 add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
 add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
+add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
 
 } //end xdevl\social
 ?>
