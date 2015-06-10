@@ -51,8 +51,17 @@ function login_form()
 <?php
 }
 
+function comment_form_default_fields($fields)
+{
+	$fields['author']='' ;
+	$fields['email']='' ;
+	$fields['url']='' ;
+	return $fields ;
+}
+
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_form',__NAMESPACE__.'\login_form') ;
+add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
 
 } //end xdevl\social
 ?>
