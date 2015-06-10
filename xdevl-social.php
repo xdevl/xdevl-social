@@ -32,5 +32,27 @@ defined('ABSPATH') or die('No script kiddies please!') ;
 
 define(__NAMESPACE__.'\PLUGIN_NAMESPACE','xdevl_social') ;
 
+function wp_enqueue_scripts()
+{
+	wp_register_style(PLUGIN_NAMESPACE.'_style',plugins_url('style.css',__FILE__)) ;
+	wp_enqueue_style(PLUGIN_NAMESPACE.'_style') ;
+}
+
+function login_form()
+{
+?>
+<p class="<?php echo PLUGIN_NAMESPACE ?>">
+	<label>
+		Or, login using<br />
+		<span class="social-button google"></span>
+		<span class="social-button facebook"></span>
+	</label>
+</p>
+<?php
+}
+
+add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
+add_action('login_form',__NAMESPACE__.'\login_form') ;
+
 } //end xdevl\social
 ?>
