@@ -53,10 +53,20 @@ function login_form()
 
 function comment_form_default_fields($fields)
 {
-	$fields['author']='' ;
-	$fields['email']='' ;
-	$fields['url']='' ;
+	unset($fields['author']) ;
+	unset($fields['email']) ;
+	unset($fields['url']) ;
+	
 	return $fields ;
+}
+
+function comment_form_defaults($defaults)
+{
+	$defaults['must_log_in']='<p class="must-log-in '.PLUGIN_NAMESPACE.'">'.
+			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).'">log in</a> or authenticate using one of the following providers:<br />'.
+			'<a href="'.wp_login_url().'?provider=Google"><span class="social-button google"></span></a>'.
+			'<a href="'.wp_login_url().'?provider=Facebook"><span class="social-button facebook"></span></a>' ;
+	return $defaults ;
 }
 
 function show_password_fields($value, $profile)
@@ -161,9 +171,11 @@ function authenticate($user, $username, $password)
 	}	
 }
 
+add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_form',__NAMESPACE__.'\login_form') ;
 add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
+add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
 add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
 add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
 
