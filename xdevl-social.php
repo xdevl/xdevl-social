@@ -139,8 +139,8 @@ function create_user($provider, $userProfile)
 	
 	if(!is_wp_error($result))
 	{
-		if(add_user_meta($userId,get_provider_id_meta_key($provider),$userProfile->identifier)
-				&& add_user_meta($userId,get_provider_profile_meta_key($provider),json_encode($userProfile)))
+		if(add_user_meta($result,get_provider_id_meta_key($provider),$userProfile->identifier)
+				&& add_user_meta($result,get_provider_profile_meta_key($provider),json_encode($userProfile)))
 			return get_user_by('id',$result) ;
 		else return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: Unable to save user meta data')) ;
 	}
