@@ -14,6 +14,11 @@
 	background-image: url("img/google.png") ;
 }
 
+.xdevl_social span.github
+{
+	background-image: url("img/github.png") ;
+}
+
 .xdevl_social span.facebook
 {
 	background-image: url("img/facebook.png") ;

@@ -47,6 +47,7 @@ function login_form()
 		Or, authenticate using<br />
 		<a href="<?php echo wp_login_url(); ?>?provider=Google"><span class="social-button google"></span></a>
 		<a href="<?php echo wp_login_url(); ?>?provider=Facebook"><span class="social-button facebook"></span></a>
+		<a href="<?php echo wp_login_url(); ?>?provider=GitHub"><span class="social-button github"></span></a>
 	</label>
 </p>
 <?php
@@ -66,7 +67,8 @@ function comment_form_defaults($defaults)
 	$defaults['must_log_in']='<p class="must-log-in '.PLUGIN_NAMESPACE.'">'.
 			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).'">log in</a> or authenticate using one of the following providers:<br />'.
 			'<a href="'.wp_login_url(get_permalink()).'&provider=Google"><span class="social-button google"></span></a>'.
-			'<a href="'.wp_login_url(get_permalink()).'&provider=Facebook"><span class="social-button facebook"></span></a>' ;
+			'<a href="'.wp_login_url(get_permalink()).'&provider=Facebook"><span class="social-button facebook"></span></a>'.
+			'<a href="'.wp_login_url(get_permalink()).'&provider=GitHub"><span class="social-button github"></span></a>' ;
 	return $defaults ;
 }
 
@@ -169,7 +171,7 @@ function authenticate($user, $username, $password)
 		} catch(Exception $e) {
 			return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: Login failed, please try again')) ;
 		}
-	}	
+	}
 }
 
 add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
