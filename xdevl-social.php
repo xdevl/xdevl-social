@@ -31,6 +31,7 @@ namespace xdevl\social
 defined('ABSPATH') or die('No script kiddies please!') ;
 
 define(__NAMESPACE__.'\PLUGIN_NAMESPACE','xdevl_social') ;
+define(__NAMESPACE__.'\HYBRIDAUTH_DIR',plugin_dir_path(__FILE__).'hybridauth/hybridauth') ;
 
 function wp_enqueue_scripts()
 {
@@ -155,10 +156,9 @@ function authenticate($user, $username, $password)
 	if(isset($_GET['provider'])) 
 	{
 		$provider=$_GET['provider'] ;
-		$hybridAuthDir=plugin_dir_path(__FILE__).'hybridauth/hybridauth' ;
 		try {
-			require_once($hybridAuthDir.'/Hybrid/Auth.php') ;
-			$hybridauth=new \Hybrid_Auth($hybridAuthDir.'/config.php') ;
+			require_once(HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
+			$hybridauth=new \Hybrid_Auth(HYBRIDAUTH_DIR.'/config.php') ;
 			$adapter=$hybridauth->authenticate($_GET['provider']) ;
 			$userProfile=$adapter->getUserProfile() ;
 			
@@ -171,7 +171,7 @@ function authenticate($user, $username, $password)
 		} catch(Exception $e) {
 			return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: Login failed, please try again')) ;
 		}
-	}
+	}	
 }
 
 add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
