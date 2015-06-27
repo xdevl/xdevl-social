@@ -31,7 +31,86 @@ namespace xdevl\social
 defined('ABSPATH') or die('No script kiddies please!') ;
 
 define(__NAMESPACE__.'\PLUGIN_NAMESPACE','xdevl_social') ;
-define(__NAMESPACE__.'\HYBRIDAUTH_DIR',plugin_dir_path(__FILE__).'hybridauth/hybridauth') ;
+
+// Form setting
+define(__NAMESPACE__.'\PLUGIN_SETTINGS',PLUGIN_NAMESPACE) ;
+
+// Others
+define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
+define(__NAMESPACE__.'\HYBRIDAUTH_DIR',plugin_dir_path(__FILE__).'hybridauth/hybridauth/') ;
+
+function list_providers()
+{
+	$providers=array() ;
+	if($directory=opendir(HYBRIDAUTH_DIR.'Hybrid/Providers'))
+	{
+		while(($file=readdir($directory))!==false)
+			if(strpos($file,PHP_EXTENSION)==strlen($file)-strlen(PHP_EXTENSION))
+				array_push($providers,substr($file,0,strlen(PHP_EXTENSION)*-1)) ;
+		closedir($directory) ;
+		sort($providers,SORT_STRING) ;
+	}
+	return $providers ;
+}
+
+function admin_init()
+{
+	add_option('xdevl_test',array('Hello'=>'World', 'Bonjour'=>'Monde')) ;
+	
+	foreach(list_providers() as $provider)
+	{
+		$settingsGroup=PLUGIN_SETTINGS."_$provider" ;
+		$settingActive=$settingsGroup.'_active' ;
+		$settingPublicKey=$settingsGroup.'_publickey' ;
+		$settingPrivateKey=$settingsGroup.'_privatekey' ;
+		$settingExtra=$settingsGroup.'_extra' ;
+		
+		add_settings_section($settingsGroup,$provider,null,PLUGIN_SETTINGS) ;
+		
+		add_settings_field($settingActive,'Status:', __NAMESPACE__.'\checkbox_callback',PLUGIN_SETTINGS,$settingsGroup,$settingActive) ;
+		add_settings_field($settingPublicKey,'Public key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,$settingPublicKey) ;
+		add_settings_field($settingPrivateKey,'Private key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,$settingPrivateKey) ;
+		add_settings_field($settingExtra,'Extra:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,$settingExtra) ;
+		
+		register_setting(PLUGIN_SETTINGS,$settingActive) ;
+		register_setting(PLUGIN_SETTINGS,$settingPublicKey) ;
+		register_setting(PLUGIN_SETTINGS,$settingPrivateKey) ;
+		register_setting(PLUGIN_SETTINGS,$settingExtra) ;
+	}
+}
+
+function admin_menu()
+{
+	add_options_page('XdevL social setup','XdevL social','manage_options',PLUGIN_SETTINGS, __NAMESPACE__.'\options_page') ;
+}
+
+function input_callback($option)
+{
+	$value=get_option($option) ;
+	echo "<input id=\"$option\" name=\"$option\" type=\"text\" size=\"64\" value=\"$value\" />" ;
+}
+
+function checkbox_callback($option)
+{
+	$value=get_option($option) ;
+	echo "<fieldset><label for=\"$option\"><input id=\"$option\" name=\"$option\" type=\"checkbox\" value=true ".($value=='true'?'checked':'')." /> Active</label></fieldset>" ;
+}
+
+function options_page()
+{
+?>
+<div>
+	<h2>XdevL social setup</h2>
+	<form method="post" action="options.php">
+		<?php
+			settings_fields(PLUGIN_SETTINGS) ;
+			do_settings_sections(PLUGIN_SETTINGS) ;
+			submit_button() ; ?>
+	</form>
+</div>
+
+<?php
+}
 
 function wp_enqueue_scripts()
 {
@@ -181,6 +260,12 @@ add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fi
 add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
 add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
 add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
+
+if(is_admin())
+{
+	add_action('admin_menu',__NAMESPACE__.'\admin_menu') ;
+	add_action('admin_init',__NAMESPACE__.'\admin_init') ;
+}
 
 } //end xdevl\social
 ?>
