@@ -121,6 +121,25 @@ function options_page()
 <?php
 }
 
+function get_HybridAuth_config()
+{
+	$providers=array() ;
+	
+	foreach(list_providers() as $provider)
+	{
+		$providerOptions=get_option(PROVIDER_SETTINGS.'_'.$provider,array()) ;
+		$providerConfig=array_key_exists(PROVIDER_EXTRA,$providerOptions)?json_decode($providerOptions[PROVIDER_EXTRA],true):null ;
+		if(!$providerConfig)
+			$providerConfig=array() ;
+		$providerConfig['enabled']=array_key_exists(PROVIDER_ACTIVE,$providerOptions)?$providerOptions[PROVIDER_ACTIVE]==true:false ;
+		$providerConfig['keys']=array('id'=>$providerOptions[PROVIDER_PUBLIC_KEY],'secret'=>$providerOptions[PROVIDER_PRIVATE_KEY]) ;
+		
+		$providers[$provider]=$providerConfig ;
+	}
+	
+	return array('base_url'=>plugins_url('hybridauth/hybridauth/',__FILE__),'providers'=>$providers) ;
+}
+
 function wp_enqueue_scripts()
 {
 	wp_register_style(PLUGIN_NAMESPACE.'_style',plugins_url('style.css',__FILE__)) ;
@@ -246,7 +265,7 @@ function authenticate($user, $username, $password)
 		$provider=$_GET['provider'] ;
 		try {
 			require_once(HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
-			$hybridauth=new \Hybrid_Auth(HYBRIDAUTH_DIR.'/config.php') ;
+			$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
 			$adapter=$hybridauth->authenticate($_GET['provider']) ;
 			$userProfile=$adapter->getUserProfile() ;
 			
