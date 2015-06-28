@@ -34,6 +34,11 @@ define(__NAMESPACE__.'\PLUGIN_NAMESPACE','xdevl_social') ;
 
 // Form setting
 define(__NAMESPACE__.'\PLUGIN_SETTINGS',PLUGIN_NAMESPACE) ;
+define(__NAMESPACE__.'\PROVIDER_SETTINGS',PLUGIN_NAMESPACE.'_provider') ;
+define(__NAMESPACE__.'\PROVIDER_ACTIVE','active') ;
+define(__NAMESPACE__.'\PROVIDER_PUBLIC_KEY','publickey') ;
+define(__NAMESPACE__.'\PROVIDER_PRIVATE_KEY','privatekey') ;
+define(__NAMESPACE__.'\PROVIDER_EXTRA','extra') ;
 
 // Others
 define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
@@ -59,23 +64,16 @@ function admin_init()
 	
 	foreach(list_providers() as $provider)
 	{
-		$settingsGroup=PLUGIN_SETTINGS."_$provider" ;
-		$settingActive=$settingsGroup.'_active' ;
-		$settingPublicKey=$settingsGroup.'_publickey' ;
-		$settingPrivateKey=$settingsGroup.'_privatekey' ;
-		$settingExtra=$settingsGroup.'_extra' ;
+		$settingsGroup=PROVIDER_SETTINGS."_$provider" ;
 		
 		add_settings_section($settingsGroup,$provider,null,PLUGIN_SETTINGS) ;
 		
-		add_settings_field($settingActive,'Status:', __NAMESPACE__.'\checkbox_callback',PLUGIN_SETTINGS,$settingsGroup,$settingActive) ;
-		add_settings_field($settingPublicKey,'Public key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,$settingPublicKey) ;
-		add_settings_field($settingPrivateKey,'Private key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,$settingPrivateKey) ;
-		add_settings_field($settingExtra,'Extra:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,$settingExtra) ;
+		add_settings_field($settingsGroup.'['.PROVIDER_ACTIVE.']','Status:', __NAMESPACE__.'\checkbox_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_ACTIVE)) ;
+		add_settings_field($settingsGroup.'['.PROVIDER_PUBLIC_KEY.']','Public key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_PUBLIC_KEY)) ;
+		add_settings_field($settingsGroup.'['.PROVIDER_PRIVATE_KEY.']','Private key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_PRIVATE_KEY)) ;
+		add_settings_field($settingsGroup.'['.PROVIDER_EXTRA.']','Extra:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_EXTRA)) ;
 		
-		register_setting(PLUGIN_SETTINGS,$settingActive) ;
-		register_setting(PLUGIN_SETTINGS,$settingPublicKey) ;
-		register_setting(PLUGIN_SETTINGS,$settingPrivateKey) ;
-		register_setting(PLUGIN_SETTINGS,$settingExtra) ;
+		register_setting(PLUGIN_SETTINGS,$settingsGroup) ;
 	}
 }
 
@@ -84,16 +82,18 @@ function admin_menu()
 	add_options_page('XdevL social setup','XdevL social','manage_options',PLUGIN_SETTINGS, __NAMESPACE__.'\options_page') ;
 }
 
-function input_callback($option)
+function input_callback($args)
 {
-	$value=get_option($option) ;
-	echo "<input id=\"$option\" name=\"$option\" type=\"text\" size=\"64\" value=\"$value\" />" ;
+	$options=get_option($args[0]) ;
+	$value=array_key_exists($args[1],$options)?$options[$args[1]]:'' ;
+	echo '<input name="'.$args[0].'['.$args[1].']" type="text" size="64" value="'.$value.'" />' ;
 }
 
-function checkbox_callback($option)
+function checkbox_callback($args)
 {
-	$value=get_option($option) ;
-	echo "<fieldset><label for=\"$option\"><input id=\"$option\" name=\"$option\" type=\"checkbox\" value=true ".($value=='true'?'checked':'')." /> Active</label></fieldset>" ;
+	$options=get_option($args[0]) ;
+	$value=array_key_exists($args[1],$options) && $options[$args[1]]==true?'checked':'' ;
+	echo '<fieldset><label><input name="'.$args[0].'['.$args[1].']" type="checkbox" value=true '.$value.' /> Active</label></fieldset>' ;
 }
 
 function options_page()
