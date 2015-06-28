@@ -73,7 +73,7 @@ function admin_init()
 		add_settings_field($settingsGroup.'['.PROVIDER_PRIVATE_KEY.']','Private key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_PRIVATE_KEY)) ;
 		add_settings_field($settingsGroup.'['.PROVIDER_EXTRA.']','Extra:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_EXTRA)) ;
 		
-		register_setting(PLUGIN_SETTINGS,$settingsGroup) ;
+		register_setting(PLUGIN_SETTINGS,$settingsGroup,__NAMESPACE__.'\sanitize_callback') ;
 	}
 }
 
@@ -85,15 +85,24 @@ function admin_menu()
 function input_callback($args)
 {
 	$options=get_option($args[0]) ;
-	$value=array_key_exists($args[1],$options)?$options[$args[1]]:'' ;
-	echo '<input name="'.$args[0].'['.$args[1].']" type="text" size="64" value="'.$value.'" />' ;
+	$value=is_array($options) && array_key_exists($args[1],$options)?$options[$args[1]]:'' ;
+	echo '<input name="'.$args[0].'['.$args[1].']" type="text" size="64" value="'.htmlspecialchars($value).'" />' ;
 }
 
 function checkbox_callback($args)
 {
 	$options=get_option($args[0]) ;
-	$value=array_key_exists($args[1],$options) && $options[$args[1]]==true?'checked':'' ;
+	$value=is_array($options) && array_key_exists($args[1],$options) && $options[$args[1]]==true?'checked':'' ;
 	echo '<fieldset><label><input name="'.$args[0].'['.$args[1].']" type="checkbox" value=true '.$value.' /> Active</label></fieldset>' ;
+}
+
+function sanitize_callback($providerSettings)
+{
+	if(array_key_exists(PROVIDER_EXTRA,$providerSettings) && !empty($providerSettings[PROVIDER_EXTRA]))
+		if(!json_decode($providerSettings[PROVIDER_EXTRA],true))
+			add_settings_error(PROVIDER_EXTRA,PROVIDER_EXTRA,json_Last_error_msg()) ;
+			
+	return $providerSettings ;
 }
 
 function options_page()
