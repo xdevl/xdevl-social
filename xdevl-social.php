@@ -59,6 +59,14 @@ function list_providers()
 	return $providers ;
 }
 
+function echo_providers()
+{
+	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
+	if(is_array($activeProviders))
+		foreach($activeProviders as $provider)
+			echo '<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" />' ;		
+}
+
 class ProviderSettings
 {
 	function __construct($provider)
@@ -185,9 +193,7 @@ function login_form()
 <p class="<?php echo PLUGIN_NAMESPACE ?>">
 	<label>
 		Or, authenticate using<br />
-		<a href="<?php echo wp_login_url(); ?>?provider=Google"><span class="social-button google"></span></a>
-		<a href="<?php echo wp_login_url(); ?>?provider=Facebook"><span class="social-button facebook"></span></a>
-		<a href="<?php echo wp_login_url(); ?>?provider=GitHub"><span class="social-button github"></span></a>
+		<?php echo_providers(); ?>
 	</label>
 </p>
 <?php
