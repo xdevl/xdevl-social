@@ -58,42 +58,76 @@ function list_providers()
 	return $providers ;
 }
 
+class ProviderSettings
+{
+	function __construct($provider)
+	{
+		$this->provider=$provider ;
+		$this->options=get_option($this->getSettingsGroup()) ;
+	}
+	
+	function getProvider()
+	{
+		return $this->provider ;
+	}
+	
+	function getSettingsGroup()
+	{
+		return PROVIDER_SETTINGS.'_'.$this->provider ;
+	}
+	
+	function getSettingName($setting)
+	{
+		return $this->getSettingsGroup().'['.$setting.']' ;
+	}
+	
+	function getSetting($setting,$default)
+	{
+		return is_array($this->options) && array_key_exists($setting,$this->options)
+				&& !empty($this->options[$setting])?$this->options[$setting]:$default ;
+	}
+	
+	function inputCallback($setting)
+	{
+		echo '<input name="'.$this->getSettingName($setting).'" type="text" size="64" value="'.htmlspecialchars($this->getSetting($setting,'')).'" />' ;
+	}
+	
+	function checkboxCallback($setting)
+	{
+		echo '<fieldset><label><input name="'.$this->getSettingName($setting).'" type="checkbox" value=true '.
+				($this->getSetting($setting,false)==true?'checked':'').' /> Active</label></fieldset>' ;
+	}
+	
+	function getConfig()
+	{
+		$config=json_decode($this->getSetting(PROVIDER_EXTRA,'{}'),true) ;
+		$config=$config?$config:array() ;
+		$config['enabled']=$this->getSetting(PROVIDER_ACTIVE,false) ;
+		$config['keys']=array('id'=>$this->getSetting(PROVIDER_PUBLIC_KEY,''),'secret'=> $this->getSetting(PROVIDER_PRIVATE_KEY,'')) ;
+		return $config ;
+	}
+}
+
 function admin_init()
 {
-	add_option('xdevl_test',array('Hello'=>'World', 'Bonjour'=>'Monde')) ;
-	
 	foreach(list_providers() as $provider)
 	{
-		$settingsGroup=PROVIDER_SETTINGS."_$provider" ;
+		$providerSettings=new ProviderSettings($provider) ;
 		
-		add_settings_section($settingsGroup,$provider,null,PLUGIN_SETTINGS) ;
+		add_settings_section($providerSettings->getSettingsGroup(),$providerSettings->getProvider(),null,PLUGIN_SETTINGS) ;
 		
-		add_settings_field($settingsGroup.'['.PROVIDER_ACTIVE.']','Status:', __NAMESPACE__.'\checkbox_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_ACTIVE)) ;
-		add_settings_field($settingsGroup.'['.PROVIDER_PUBLIC_KEY.']','Public key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_PUBLIC_KEY)) ;
-		add_settings_field($settingsGroup.'['.PROVIDER_PRIVATE_KEY.']','Private key:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_PRIVATE_KEY)) ;
-		add_settings_field($settingsGroup.'['.PROVIDER_EXTRA.']','Extra:', __NAMESPACE__.'\input_callback',PLUGIN_SETTINGS,$settingsGroup,array($settingsGroup,PROVIDER_EXTRA)) ;
+		add_settings_field($providerSettings->getSettingName(PROVIDER_ACTIVE),'Status:',array($providerSettings,'checkboxCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_ACTIVE) ;
+		add_settings_field($providerSettings->getSettingName(PROVIDER_PUBLIC_KEY),'Public key:',array($providerSettings,'inputCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_PUBLIC_KEY) ;
+		add_settings_field($providerSettings->getSettingName(PROVIDER_PRIVATE_KEY),'Private key:',array($providerSettings,'inputCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_PRIVATE_KEY) ;
+		add_settings_field($providerSettings->getSettingName(PROVIDER_EXTRA),'Extra:',array($providerSettings,'inputCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_EXTRA) ;
 		
-		register_setting(PLUGIN_SETTINGS,$settingsGroup,__NAMESPACE__.'\sanitize_callback') ;
+		register_setting(PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),__NAMESPACE__.'\sanitize_callback') ;
 	}
 }
 
 function admin_menu()
 {
 	add_options_page('XdevL social setup','XdevL social','manage_options',PLUGIN_SETTINGS, __NAMESPACE__.'\options_page') ;
-}
-
-function input_callback($args)
-{
-	$options=get_option($args[0]) ;
-	$value=is_array($options) && array_key_exists($args[1],$options)?$options[$args[1]]:'' ;
-	echo '<input name="'.$args[0].'['.$args[1].']" type="text" size="64" value="'.htmlspecialchars($value).'" />' ;
-}
-
-function checkbox_callback($args)
-{
-	$options=get_option($args[0]) ;
-	$value=is_array($options) && array_key_exists($args[1],$options) && $options[$args[1]]==true?'checked':'' ;
-	echo '<fieldset><label><input name="'.$args[0].'['.$args[1].']" type="checkbox" value=true '.$value.' /> Active</label></fieldset>' ;
 }
 
 function sanitize_callback($providerSettings)
@@ -124,18 +158,8 @@ function options_page()
 function get_HybridAuth_config()
 {
 	$providers=array() ;
-	
 	foreach(list_providers() as $provider)
-	{
-		$providerOptions=get_option(PROVIDER_SETTINGS.'_'.$provider,array()) ;
-		$providerConfig=array_key_exists(PROVIDER_EXTRA,$providerOptions)?json_decode($providerOptions[PROVIDER_EXTRA],true):null ;
-		if(!$providerConfig)
-			$providerConfig=array() ;
-		$providerConfig['enabled']=array_key_exists(PROVIDER_ACTIVE,$providerOptions)?$providerOptions[PROVIDER_ACTIVE]==true:false ;
-		$providerConfig['keys']=array('id'=>$providerOptions[PROVIDER_PUBLIC_KEY],'secret'=>$providerOptions[PROVIDER_PRIVATE_KEY]) ;
-		
-		$providers[$provider]=$providerConfig ;
-	}
+		$providers[$provider]=(new ProviderSettings($provider))->getConfig() ;
 	
 	return array('base_url'=>plugins_url('hybridauth/hybridauth/',__FILE__),'providers'=>$providers) ;
 }
