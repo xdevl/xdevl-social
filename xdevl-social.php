@@ -34,6 +34,7 @@ define(__NAMESPACE__.'\PLUGIN_NAMESPACE','xdevl_social') ;
 
 // Form setting
 define(__NAMESPACE__.'\PLUGIN_SETTINGS',PLUGIN_NAMESPACE) ;
+define(__NAMESPACE__.'\PLUGIN_SETTINGS_ACTIVE_PROVIDERS',PLUGIN_NAMESPACE.'_activeproviders') ;
 define(__NAMESPACE__.'\PROVIDER_SETTINGS',PLUGIN_NAMESPACE.'_provider') ;
 define(__NAMESPACE__.'\PROVIDER_ACTIVE','active') ;
 define(__NAMESPACE__.'\PROVIDER_PUBLIC_KEY','publickey') ;
@@ -87,15 +88,21 @@ class ProviderSettings
 				&& !empty($this->options[$setting])?$this->options[$setting]:$default ;
 	}
 	
+	function isActive()
+	{
+		$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
+		return is_array($activeProviders) && in_array($this->getProvider(),$activeProviders) ;
+	}
+	
 	function inputCallback($setting)
 	{
 		echo '<input name="'.$this->getSettingName($setting).'" type="text" size="64" value="'.htmlspecialchars($this->getSetting($setting,'')).'" />' ;
 	}
 	
-	function checkboxCallback($setting)
+	function checkboxCallback()
 	{
-		echo '<fieldset><label><input name="'.$this->getSettingName($setting).'" type="checkbox" value=true '.
-				($this->getSetting($setting,false)==true?'checked':'').' /> Active</label></fieldset>' ;
+		echo '<fieldset><label><input name="'.PLUGIN_SETTINGS_ACTIVE_PROVIDERS.'[]" type="checkbox" value="'.$this->getProvider().'" '.
+				($this->isActive()==true?'checked':'').' /> Active</label></fieldset>' ;
 	}
 	
 	function getConfig()
@@ -116,12 +123,13 @@ function admin_init()
 		
 		add_settings_section($providerSettings->getSettingsGroup(),$providerSettings->getProvider(),null,PLUGIN_SETTINGS) ;
 		
-		add_settings_field($providerSettings->getSettingName(PROVIDER_ACTIVE),'Status:',array($providerSettings,'checkboxCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_ACTIVE) ;
+		add_settings_field(PLUGIN_SETTINGS_ACTIVE_PROVIDERS.'[]','Status:',array($providerSettings,'checkboxCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup()) ;
 		add_settings_field($providerSettings->getSettingName(PROVIDER_PUBLIC_KEY),'Public key:',array($providerSettings,'inputCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_PUBLIC_KEY) ;
 		add_settings_field($providerSettings->getSettingName(PROVIDER_PRIVATE_KEY),'Private key:',array($providerSettings,'inputCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_PRIVATE_KEY) ;
 		add_settings_field($providerSettings->getSettingName(PROVIDER_EXTRA),'Extra:',array($providerSettings,'inputCallback'),PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),PROVIDER_EXTRA) ;
 		
 		register_setting(PLUGIN_SETTINGS,$providerSettings->getSettingsGroup(),__NAMESPACE__.'\sanitize_callback') ;
+		register_setting(PLUGIN_SETTINGS,PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	}
 }
 
