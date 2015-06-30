@@ -117,7 +117,7 @@ class ProviderSettings
 	{
 		$config=json_decode($this->getSetting(PROVIDER_EXTRA,'{}'),true) ;
 		$config=$config?$config:array() ;
-		$config['enabled']=$this->getSetting(PROVIDER_ACTIVE,false) ;
+		$config['enabled']=$this->isActive() ;
 		$config['keys']=array('id'=>$this->getSetting(PROVIDER_PUBLIC_KEY,''),'secret'=> $this->getSetting(PROVIDER_PRIVATE_KEY,'')) ;
 		return $config ;
 	}
