@@ -64,7 +64,7 @@ function echo_providers()
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	if(is_array($activeProviders))
 		foreach($activeProviders as $provider)
-			echo '<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" />' ;		
+			echo '<a href="'.wp_login_url().'?provider='.$provider.'"><img class="social-button" src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" />' ;		
 }
 
 class ProviderSettings
