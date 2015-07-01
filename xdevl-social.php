@@ -240,6 +240,7 @@ abstract class MatchType
 	const EMAIL=2 ;
 }
 
+// TODO: this function is unsafe, we should only authenticate a user based on his email address if it has been verified first
 /**
  * Returns an array of (WP_User, MatchType) 
  **/ 
@@ -307,11 +308,16 @@ function authenticate($user, $username, $password)
 			$adapter=$hybridauth->authenticate($_GET['provider']) ;
 			$userProfile=$adapter->getUserProfile() ;
 			
-			$lookup=user_lookup($provider,$userProfile) ;
+			$users=get_users(array('meta_key'=>get_provider_id_meta_key($provider),'meta_value'=>$userProfile->identifier)) ;
+			if(count($users)!=1)
+				return create_user($provider,$userProfile) ;
+			else return $users[0] ;
+			
+			/*$lookup=user_lookup($provider,$userProfile) ;
 			if($lookup[0]==false)
 				return create_user($provider,$userProfile) ;
 			// TODO: update user info if it has changed
-			else return $lookup[0] ;
+			else return $lookup[0] ;*/
 			
 		} catch(Exception $e) {
 			return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: Login failed, please try again')) ;
