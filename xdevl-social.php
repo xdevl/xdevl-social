@@ -319,8 +319,8 @@ function authenticate($user, $username, $password)
 			// TODO: update user info if it has changed
 			else return $lookup[0] ;*/
 			
-		} catch(Exception $e) {
-			return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: Login failed, please try again')) ;
+		} catch(\Exception $e) {
+			return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: '.$e->getMessage())) ;
 		}
 	}	
 }
