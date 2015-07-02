@@ -59,12 +59,14 @@ function list_providers()
 	return $providers ;
 }
 
-function echo_providers()
+function providers_panel()
 {
+	$providersPanel='' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	if(is_array($activeProviders))
 		foreach($activeProviders as $provider)
-			echo '<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" />' ;		
+			$providersPanel.='<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" />' ;
+	return $providersPanel ;
 }
 
 class ProviderSettings
@@ -189,14 +191,12 @@ function wp_enqueue_scripts()
 // TODO: make use of redirect_to
 function login_form()
 {
-?>
-<p class="<?php echo PLUGIN_NAMESPACE ?>">
-	<label>
-		Or, authenticate using<br />
-		<?php echo_providers(); ?>
-	</label>
-</p>
-<?php
+	return '<p class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel().'</label></p>' ;
+}
+
+function echo_login_form()
+{
+	echo login_form() ;
 }
 
 function comment_form_default_fields($fields)
@@ -321,7 +321,8 @@ function authenticate($user, $username, $password)
 
 add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
-add_action('login_form',__NAMESPACE__.'\login_form') ;
+add_action('login_form',__NAMESPACE__.'\echo_login_form') ;
+add_filter('login_form_middle',__NAMESPACE__.'\login_form') ;
 add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
 add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
 add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
