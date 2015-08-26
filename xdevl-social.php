@@ -61,12 +61,12 @@ function list_providers()
 
 function providers_panel()
 {
-	$providersPanel='' ;
+	$providersPanel='<div class="social-panel">' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	if(is_array($activeProviders))
 		foreach($activeProviders as $provider)
-			$providersPanel.='<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" />' ;
-	return $providersPanel ;
+			$providersPanel.='<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
+	return $providersPanel.'</div>' ;
 }
 
 class ProviderSettings
@@ -191,7 +191,7 @@ function wp_enqueue_scripts()
 // TODO: make use of redirect_to
 function login_form()
 {
-	return '<p class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel().'</label></p>' ;
+	return '<div class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel().'</label></div>' ;
 }
 
 function echo_login_form()
@@ -204,17 +204,13 @@ function comment_form_default_fields($fields)
 	unset($fields['author']) ;
 	unset($fields['email']) ;
 	unset($fields['url']) ;
-	
-	return $fields ;
 }
 
 function comment_form_defaults($defaults)
 {
-	$defaults['must_log_in']='<p class="must-log-in '.PLUGIN_NAMESPACE.'">'.
-			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).'">log in</a> or authenticate using one of the following providers:<br />'.
-			'<a href="'.wp_login_url(get_permalink()).'&provider=Google"><span class="social-button google"></span></a>'.
-			'<a href="'.wp_login_url(get_permalink()).'&provider=Facebook"><span class="social-button facebook"></span></a>'.
-			'<a href="'.wp_login_url(get_permalink()).'&provider=GitHub"><span class="social-button github"></span></a>' ;
+	$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.
+			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).'">log in</a> or authenticate using one of the following providers:'.providers_panel().'</div>' ;
+
 	return $defaults ;
 }
 

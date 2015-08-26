@@ -1,32 +1,11 @@
-.xdevl_social img.social-button
+.xdevl_social div.social-panel
 {
-	width: 32px ;
-	height: 32px ;
-	margin: 0.2em ;
+	margin-top: 0.5rem ;
+	margin-bottom: 1.5rem ;
 }
 
-.xdevl_social span.social-button
+.xdevl_social div.social-panel a
 {
-	width: 2rem ;
-	height: 2rem ;
-	margin: 0.4rem 0 ;
 	display: inline-block ;
-	background-size: 2rem 2rem ;
-	background-position: left center ;
-	background-repeat: no-repeat ;
-}
-
-.xdevl_social span.google
-{
-	background-image: url("img/google.png") ;
-}
-
-.xdevl_social span.github
-{
-	background-image: url("img/github.png") ;
-}
-
-.xdevl_social span.facebook
-{
-	background-image: url("img/facebook.png") ;
+	margin-right: 0.2rem ;
 }
