@@ -201,15 +201,31 @@ function echo_login_form()
 
 function comment_form_default_fields($fields)
 {
-	unset($fields['author']) ;
+	$commenter=wp_get_current_commenter() ;
+	$req=get_option('require_name_email') ;
+	$aria_req=$req?"aria-required='true'":'' ;
+	$fields['author']='<p class="comment-form-author"><input id="author" name="author" type="text" value="'
+			.esc_attr($commenter['comment_author']).'" placeholder="'.__('Name','domainreference').'" size="30"'.$aria_req.' /></p>' ;
+			
+	$fields['email']='<p class="comment-form-email"><input id="email" name="email" type="text" value="'
+			.esc_attr($commenter['comment_author_email']).'" placeholder="'.__('Email','domainreference').'" size="30"'.$aria_req.' /></p>' ;
+			
+	$fields['url']='<p class="comment-form-url"><input id="url" name="url" type="text" value="'
+			.esc_attr($commenter['comment_author_url']).'" placeholder="'.__('Website','domainreference').'" size="30" /></p>' ;
+	
+	/*unset($fields['author']) ;
 	unset($fields['email']) ;
-	unset($fields['url']) ;
+	unset($fields['url']) ;*/
+	
+	return $fields ;
 }
 
 function comment_form_defaults($defaults)
 {
 	$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.
 			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).'">log in</a> or authenticate using one of the following providers:'.providers_panel().'</div>' ;
+			
+	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">Authenticate using one of the following providers:'.providers_panel().'</div><p>Or enter the following information:</p>' ;
 
 	return $defaults ;
 }
