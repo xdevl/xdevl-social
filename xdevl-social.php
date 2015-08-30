@@ -230,11 +230,15 @@ function comment_form_default_fields($fields)
 
 function comment_form_defaults($defaults)
 {
-	$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.
+	global $login_error ;
+	
+	$error=empty($login_error)?'':'<div class="xdevl_alert-box xdevl_alert">'.$login_error.'</div> ' ;
+	
+	$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.$error.
 			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
 			'">log in</a> or authenticate using one of the following providers:'.providers_panel(get_permalink()).'</div>' ;
 			
-	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">Authenticate using one of the following providers:'.
+	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.'Authenticate using one of the following providers:'.
 			providers_panel(get_permalink()).'</div><p>Or enter the following information:</p>' ;
 
 	return $defaults ;
@@ -349,11 +353,13 @@ function authenticate($user, $username, $password)
 
 function wp_loaded()
 {
+	global $login_error ;
 	if(!is_user_logged_in())
 	{
 		$user=wp_signon() ;
 		if(!is_wp_error($user))
 			wp_set_current_user($user->ID) ;
+		else $login_error=$user->get_error_message() ;
 	}
 }
 

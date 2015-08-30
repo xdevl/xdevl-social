@@ -9,3 +9,16 @@
 	display: inline-block ;
 	margin-right: 0.2rem ;
 }
+
+.xdevl_social .xdevl_alert-box
+{
+	padding: 0.4em 1em;
+	margin: 1em 0 ;
+	font-size: 0.9em ;
+}
+
+.xdevl_social .xdevl_alert
+{
+	color: white ;
+	background-color: red ;
+}
