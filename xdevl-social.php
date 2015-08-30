@@ -47,12 +47,12 @@ define(__NAMESPACE__.'\URL_PARAM_PROVIDER',PLUGIN_NAMESPACE.'_provider') ;
 
 // Others
 define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
-define(__NAMESPACE__.'\HYBRIDAUTH_DIR',plugin_dir_path(__FILE__).'hybridauth/hybridauth/') ;
+define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauthdev') ;
 
 function list_providers()
 {
 	$providers=array() ;
-	if($directory=opendir(HYBRIDAUTH_DIR.'Hybrid/Providers'))
+	if($directory=opendir(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'/Hybrid/Providers'))
 	{
 		while(($file=readdir($directory))!==false)
 			if(strpos($file,PHP_EXTENSION)==strlen($file)-strlen(PHP_EXTENSION))
@@ -187,7 +187,7 @@ function get_HybridAuth_config()
 	foreach(list_providers() as $provider)
 		$providers[$provider]=(new ProviderSettings($provider))->getConfig() ;
 	
-	return array('base_url'=>plugins_url('hybridauth/hybridauth/',__FILE__),'providers'=>$providers) ;
+	return array('base_url'=>plugins_url(HYBRIDAUTH_DIR,__FILE__),'providers'=>$providers) ;
 }
 
 function wp_enqueue_scripts()
@@ -325,7 +325,7 @@ function authenticate($user, $username, $password)
 	{
 		$provider=$_GET[URL_PARAM_PROVIDER] ;
 		try {
-			require_once(HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
+			require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'/Hybrid/Auth.php') ;
 			$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
 			$adapter=$hybridauth->authenticate($_GET[URL_PARAM_PROVIDER]) ;
 			$userProfile=$adapter->getUserProfile() ;
