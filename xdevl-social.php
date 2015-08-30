@@ -63,16 +63,16 @@ function list_providers()
 	return $providers ;
 }
 
-function providers_panel($redirect)
+function providers_panel($url)
 {
-	$params=$redirect?array(URL_PARAM_REDIRECT_TO=>$redirect):array() ;
+	$params=empty($_REQUEST[URL_PARAM_REDIRECT_TO])?array():array(URL_PARAM_REDIRECT_TO=>$_REQUEST[URL_PARAM_REDIRECT_TO]) ;
 	$providersPanel='<div class="social-panel">' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	if(is_array($activeProviders))
 		foreach($activeProviders as $provider)
 		{
 			$params[URL_PARAM_PROVIDER]=$provider ;
-			$providersPanel.='<a href="'.esc_url(add_query_arg($params,wp_login_url())).'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
+			$providersPanel.='<a href="'.esc_url(add_query_arg($params,$url)).'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
 		}
 	return $providersPanel.'</div>' ;
 }
@@ -199,7 +199,7 @@ function wp_enqueue_scripts()
 // TODO: make use of redirect_to
 function login_form()
 {
-	return '<div class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel(null).'</label></div>' ;
+	return '<div class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel(wp_login_url()).'</label></div>' ;
 }
 
 function echo_login_form()
@@ -347,6 +347,16 @@ function authenticate($user, $username, $password)
 	}	
 }
 
+function wp_loaded()
+{
+	if(!is_user_logged_in())
+	{
+		$user=wp_signon() ;
+		if(!is_wp_error($user))
+			wp_set_current_user($user->ID) ;
+	}
+}
+
 add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_form',__NAMESPACE__.'\echo_login_form') ;
@@ -355,6 +365,7 @@ add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fi
 add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
 add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
 add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
+add_filter('wp_loaded',__NAMESPACE__.'\wp_loaded') ;
 
 if(is_admin())
 {
