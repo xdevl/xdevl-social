@@ -236,10 +236,10 @@ function comment_form_defaults($defaults)
 	
 	$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.$error.
 			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
-			'">log in</a> or authenticate using one of the following providers:'.providers_panel(get_permalink()).'</div>' ;
+			'">log in</a> or authenticate using one of the following providers:'.providers_panel(get_permalink().'#respond').'</div>' ;
 			
 	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.'Authenticate using one of the following providers:'.
-			providers_panel(get_permalink()).'</div><p>Or enter the following information:</p>' ;
+			providers_panel(get_permalink().'#respond').'</div><p>Or enter the following information:</p>' ;
 
 	return $defaults ;
 }
