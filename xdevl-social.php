@@ -72,7 +72,7 @@ function providers_panel($redirect)
 		foreach($activeProviders as $provider)
 		{
 			$params[URL_PARAM_PROVIDER]=$provider ;
-			$providersPanel.='<a href="'.add_query_arg($params,wp_login_url()).'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
+			$providersPanel.='<a href="'.esc_url(add_query_arg($params,wp_login_url())).'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
 		}
 	return $providersPanel.'</div>' ;
 }
