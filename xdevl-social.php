@@ -59,13 +59,17 @@ function list_providers()
 	return $providers ;
 }
 
-function providers_panel()
+function providers_panel($redirect)
 {
+	$params=$redirect?array('redirect_to'=>$redirect):array() ;
 	$providersPanel='<div class="social-panel">' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	if(is_array($activeProviders))
 		foreach($activeProviders as $provider)
-			$providersPanel.='<a href="'.wp_login_url().'?provider='.$provider.'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
+		{
+			$params['provider']=$provider ;
+			$providersPanel.='<a href="'.add_query_arg($params,wp_login_url()).'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
+		}
 	return $providersPanel.'</div>' ;
 }
 
@@ -191,7 +195,7 @@ function wp_enqueue_scripts()
 // TODO: make use of redirect_to
 function login_form()
 {
-	return '<div class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel().'</label></div>' ;
+	return '<div class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel(null).'</label></div>' ;
 }
 
 function echo_login_form()
@@ -223,9 +227,11 @@ function comment_form_default_fields($fields)
 function comment_form_defaults($defaults)
 {
 	$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.
-			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).'">log in</a> or authenticate using one of the following providers:'.providers_panel().'</div>' ;
+			'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
+			'">log in</a> or authenticate using one of the following providers:'.providers_panel(get_permalink()).'</div>' ;
 			
-	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">Authenticate using one of the following providers:'.providers_panel().'</div><p>Or enter the following information:</p>' ;
+	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">Authenticate using one of the following providers:'.
+			providers_panel(get_permalink()).'</div><p>Or enter the following information:</p>' ;
 
 	return $defaults ;
 }
