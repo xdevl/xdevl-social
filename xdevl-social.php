@@ -41,6 +41,10 @@ define(__NAMESPACE__.'\PROVIDER_PUBLIC_KEY','publickey') ;
 define(__NAMESPACE__.'\PROVIDER_PRIVATE_KEY','privatekey') ;
 define(__NAMESPACE__.'\PROVIDER_EXTRA','extra') ;
 
+// Url params
+define(__NAMESPACE__.'\URL_PARAM_REDIRECT_TO','redirect_to') ;
+define(__NAMESPACE__.'\URL_PARAM_PROVIDER',PLUGIN_NAMESPACE.'_provider') ;
+
 // Others
 define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
 define(__NAMESPACE__.'\HYBRIDAUTH_DIR',plugin_dir_path(__FILE__).'hybridauth/hybridauth/') ;
@@ -61,13 +65,13 @@ function list_providers()
 
 function providers_panel($redirect)
 {
-	$params=$redirect?array('redirect_to'=>$redirect):array() ;
+	$params=$redirect?array(URL_PARAM_REDIRECT_TO=>$redirect):array() ;
 	$providersPanel='<div class="social-panel">' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
 	if(is_array($activeProviders))
 		foreach($activeProviders as $provider)
 		{
-			$params['provider']=$provider ;
+			$params[URL_PARAM_PROVIDER]=$provider ;
 			$providersPanel.='<a href="'.add_query_arg($params,wp_login_url()).'"><img src="'.plugins_url('img/'.$provider.'.png',__FILE__).'" /></a>' ;
 		}
 	return $providersPanel.'</div>' ;
@@ -317,13 +321,13 @@ function create_user($provider, $userProfile)
 function authenticate($user, $username, $password)
 {
 	// TODO: use query_var instead
-	if(isset($_GET['provider'])) 
+	if(isset($_GET[URL_PARAM_PROVIDER])) 
 	{
-		$provider=$_GET['provider'] ;
+		$provider=$_GET[URL_PARAM_PROVIDER] ;
 		try {
 			require_once(HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
 			$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
-			$adapter=$hybridauth->authenticate($_GET['provider']) ;
+			$adapter=$hybridauth->authenticate($_GET[URL_PARAM_PROVIDER]) ;
 			$userProfile=$adapter->getUserProfile() ;
 			
 			$users=get_users(array('meta_key'=>get_provider_id_meta_key($provider),'meta_value'=>$userProfile->identifier)) ;
