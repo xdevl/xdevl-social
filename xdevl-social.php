@@ -196,10 +196,16 @@ function wp_enqueue_scripts()
 	wp_enqueue_style(PLUGIN_NAMESPACE.'_style') ;
 }
 
-// TODO: make use of redirect_to
 function login_form()
 {
 	return '<div class="'.PLUGIN_NAMESPACE.'"><label>Or, authenticate using<br />'.providers_panel(wp_login_url()).'</label></div>' ;
+}
+
+function wp_logout()
+{
+	require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'/Hybrid/Auth.php') ;
+	$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
+	$hybridauth->logoutAllProviders() ;
 }
 
 function echo_login_form()
@@ -369,6 +375,7 @@ function wp_loaded()
 add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_form',__NAMESPACE__.'\echo_login_form') ;
+add_action('wp_logout',__NAMESPACE__.'\wp_logout') ;
 add_filter('login_form_middle',__NAMESPACE__.'\login_form') ;
 add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
 add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
