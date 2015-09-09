@@ -47,12 +47,12 @@ define(__NAMESPACE__.'\URL_PARAM_PROVIDER',PLUGIN_NAMESPACE.'_provider') ;
 
 // Others
 define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
-define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauthdev') ;
+define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauthdev/') ;
 
 function list_providers()
 {
 	$providers=array() ;
-	if($directory=opendir(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'/Hybrid/Providers'))
+	if($directory=opendir(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Providers'))
 	{
 		while(($file=readdir($directory))!==false)
 			if(strpos($file,PHP_EXTENSION)==strlen($file)-strlen(PHP_EXTENSION))
@@ -203,7 +203,7 @@ function login_form()
 
 function wp_logout()
 {
-	require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'/Hybrid/Auth.php') ;
+	require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
 	$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
 	$hybridauth->logoutAllProviders() ;
 }
@@ -338,7 +338,7 @@ function authenticate($user, $username, $password)
 	{
 		$provider=$_GET[URL_PARAM_PROVIDER] ;
 		try {
-			require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'/Hybrid/Auth.php') ;
+			require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
 			$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
 			$adapter=$hybridauth->authenticate($_GET[URL_PARAM_PROVIDER]) ;
 			$userProfile=$adapter->getUserProfile() ;
