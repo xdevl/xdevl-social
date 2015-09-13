@@ -34,6 +34,7 @@ define(__NAMESPACE__.'\PLUGIN_NAMESPACE','xdevl_social') ;
 
 // Form setting
 define(__NAMESPACE__.'\PLUGIN_SETTINGS',PLUGIN_NAMESPACE) ;
+define(__NAMESPACE__.'\PLUGIN_SETTINGS_FOUNDATION_ALERT',PLUGIN_SETTINGS.'_foundationalert') ;
 define(__NAMESPACE__.'\PLUGIN_SETTINGS_ACTIVE_PROVIDERS',PLUGIN_NAMESPACE.'_activeproviders') ;
 define(__NAMESPACE__.'\PROVIDER_SETTINGS',PLUGIN_NAMESPACE.'_provider') ;
 define(__NAMESPACE__.'\PROVIDER_ACTIVE','active') ;
@@ -135,6 +136,10 @@ class ProviderSettings
 
 function admin_init()
 {
+	add_settings_section(PLUGIN_SETTINGS,'Plugin settings',null,PLUGIN_SETTINGS) ;
+	add_settings_field(PLUGIN_SETTINGS_FOUNDATION_ALERT,'Use foundation alert styles:', __NAMESPACE__.'\foundation_styles_callback',PLUGIN_SETTINGS,PLUGIN_SETTINGS,PLUGIN_SETTINGS_FOUNDATION_ALERT) ;
+	register_setting(PLUGIN_SETTINGS,PLUGIN_SETTINGS_FOUNDATION_ALERT) ;
+	
 	foreach(list_providers() as $provider)
 	{
 		$providerSettings=new ProviderSettings($provider) ;
@@ -154,6 +159,12 @@ function admin_init()
 function admin_menu()
 {
 	add_options_page('XdevL social setup','XdevL social','manage_options',PLUGIN_SETTINGS, __NAMESPACE__.'\options_page') ;
+}
+
+function foundation_styles_callback($option)
+{
+	$value=get_option($option) ;
+	echo "<input id=\"$option\" name=\"$option\" type=\"checkbox\" ".($value?'checked':'').' />' ;
 }
 
 function sanitize_callback($providerSettings)
@@ -238,7 +249,7 @@ function comment_form_defaults($defaults)
 {
 	global $login_error ;
 	
-	$error=empty($login_error)?'':'<div class="xdevl_alert-box xdevl_alert">'.$login_error.'</div> ' ;
+	$error=empty($login_error)?'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'alert-box alert':'xdevl_alert-box xdevl_alert').'">'.$login_error.'</div> ' ;
 	
 	//$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.$error.
 			//'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
@@ -333,7 +344,7 @@ function create_user($provider, $userProfile)
 
 function authenticate($user, $username, $password)
 {
-	// TODO: use query_var instead
+	// TODO: be sure the following gets called only once per page load
 	if(isset($_GET[URL_PARAM_PROVIDER])) 
 	{
 		$provider=$_GET[URL_PARAM_PROVIDER] ;
