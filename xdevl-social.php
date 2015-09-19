@@ -66,6 +66,7 @@ function list_providers()
 
 function providers_panel($url)
 {
+	// TODO: keep all query args
 	$params=empty($_REQUEST[URL_PARAM_REDIRECT_TO])?array():array(URL_PARAM_REDIRECT_TO=>$_REQUEST[URL_PARAM_REDIRECT_TO]) ;
 	$providersPanel='<div class="social-panel">' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
@@ -256,6 +257,7 @@ function comment_form_defaults($defaults)
 			//'">log in</a> or authenticate using one of the following providers:'.providers_panel(get_permalink().'#respond').'</div>' ;
 			
 	$defaults['must_log_in']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.
+			// TODO: the # doesn't when redirected back after authentication, use jquery instead to scroll the page.
 			'To post a comment, authenticate using one of the following providers:'.providers_panel(get_permalink().'#respond').'</div>' ;
 			
 	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.'Authenticate using one of the following providers:'.
@@ -274,6 +276,11 @@ function get_provider_id_meta_key($provider)
 	return PLUGIN_NAMESPACE.'_'.$provider.'_id' ;
 }
 
+function get_provider_from_id_meta_key($id_meta_key)
+{
+	return substr($id_meta_key,strlen(PLUGIN_NAMESPACE.'_'),-strlen('_id')) ;
+}
+
 function get_provider_profile_meta_key($provider)
 {
 	return PLUGIN_NAMESPACE.'_'.$provider.'_profile' ;
@@ -281,12 +288,12 @@ function get_provider_profile_meta_key($provider)
 
 abstract class MatchType
 {
-	const NONE=0 ;
-	const PROVIDER=1 ;
-	const EMAIL=2 ;
+	const NONE=0 ; // User has never logged in
+	const PROVIDER=1 ; // User has already logged in before with the provider
+	const DUPLICATE=2 ; // User has already logged in before with the provider but his address email is already used
+	const EMAIL=3 ; // User has never logged in with the provider but an user with the same email already exists
 }
 
-// TODO: this function is unsafe, we should only authenticate a user based on his email address if it has been verified first
 /**
  * Returns an array of (WP_User, MatchType) 
  **/ 
@@ -299,20 +306,27 @@ function user_lookup($provider, $userProfile)
 		array($userProfile->email,get_provider_id_meta_key($provider),$userProfile->identifier))) ;
 
 	$count=count($result) ;
-	// The user has never logged in before
 	if($count==0)
-		return array(false,MatchType::NONE) ;
-	// There are two different existing accounts for the same user
-	// merge them
+		return array(0,MatchType::NONE) ;
+	else if($count==1)
+		return array($result[0]->ID,$result[0]->meta_key=='first_name'?MatchType::EMAIL:MatchType::PROVIDER) ;
 	else if($count==2 && $result[0]->ID!=$result[1]->ID)
-		wp_delete_user($result[0]->ID,$result[1]->ID) ;
-	
-	// The user has never logged in before using this provider
-	// but his email address is in the system
-	// OR
-	// The user has already logged in with this provider
-	// but his email address has changed
-	return array(get_user_by('id',$result[0]->ID),($count==1 && $result[0]->meta_key=='first_name')?MatchType::EMAIL:MatchType::PROVIDER) ;
+		return array($result[1]->ID,MatchType::DUPLICATE) ;
+	else return array($result[1]->ID,MatchType::PROVIDER) ;
+}
+
+/**
+ * List all the providers a user has previously authenticated with
+ * */
+function user_providers($userId)
+{
+	global $wpdb ;
+	$result=$wpdb->get_col($wpdb->prepare("SELECT meta_key FROM $wpdb->usermeta".
+			' WHERE meta_key LIKE %s AND user_id=%d'.
+			' ORDER BY meta_key',
+			array(get_provider_id_meta_key('%'),$userId))) ;
+			
+	return $result ;
 }
 
 /**
@@ -354,19 +368,20 @@ function authenticate($user, $username, $password)
 			$adapter=$hybridauth->authenticate($_GET[URL_PARAM_PROVIDER]) ;
 			$userProfile=$adapter->getUserProfile() ;
 			
-			$users=get_users(array('meta_key'=>get_provider_id_meta_key($provider),'meta_value'=>$userProfile->identifier)) ;
-			if(count($users)!=1)
+			$lookup=user_lookup($provider,$userProfile) ;
+			if($lookup[1]==MatchType::NONE)
 				return create_user($provider,$userProfile) ;
-			else return $users[0] ;
-			
-			/*$lookup=user_lookup($provider,$userProfile) ;
-			if($lookup[0]==false)
-				return create_user($provider,$userProfile) ;
-			// TODO: update user info if it has changed
-			else return $lookup[0] ;*/
+			else if($lookup[1]==MatchType::EMAIL)
+			{
+				$providers=user_providers($lookup[0]) ;
+				if(count($providers)>0)
+					throw new \Exception('Your Email address is already associated with a '.get_provider_from_id_meta_key($providers[0]).' account') ;
+				else throw new \Exception('Your Email address is already used by another user') ;
+			}
+			else return get_user_by('id',$lookup[0]) ;
 			
 		} catch(\Exception $e) {
-			return new \WP_Error('login_failed', __( '<strong>ERROR</strong>: '.$e->getMessage())) ;
+			return new \WP_Error('login_failed', __( '<strong>Login failed</strong>: '.$e->getMessage())) ;
 		}
 	}	
 }
