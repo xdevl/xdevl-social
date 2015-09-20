@@ -383,6 +383,7 @@ function authenticate($user, $username, $password)
 			else return get_user_by('id',$lookup[0]) ;
 			
 		} catch(\Exception $e) {
+			wp_logout() ;
 			return new \WP_Error('login_failed', __( '<strong>Login failed</strong>: '.$e->getMessage())) ;
 		}
 	}	
