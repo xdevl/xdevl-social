@@ -4,6 +4,12 @@
 	margin-bottom: 1.5rem ;
 }
 
+.xdevl_social div.social-panel span
+{
+	display: inline-block ;
+	margin-right: 0.4rem ;
+}
+
 .xdevl_social div.social-panel a
 {
 	display: inline-block ;
@@ -21,4 +27,9 @@
 {
 	color: white ;
 	background-color: red ;
+}
+
+.fb_iframe_widget span
+{
+	vertical-align: baseline !important ;
 }

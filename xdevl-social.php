@@ -206,6 +206,8 @@ function wp_enqueue_scripts()
 {
 	wp_register_style(PLUGIN_NAMESPACE.'_style',plugins_url('style.css',__FILE__)) ;
 	wp_enqueue_style(PLUGIN_NAMESPACE.'_style') ;
+	
+	wp_register_script('google','https://apis.google.com/js/platform.js',array(),null,true) ;
 }
 
 function login_form()
@@ -398,6 +400,56 @@ function wp_loaded()
 	}
 }
 
+function wp_footer()
+{
+?>
+	<div id="fb-root"></div>
+	<script>
+	(function(d, s, id) {
+		var js, fjs = d.getElementsByTagName(s)[0];
+		if (d.getElementById(id)) return;
+		js = d.createElement(s); js.id = id;
+		js.src = "//connect.facebook.net/en_GB/sdk.js#xfbml=1&version=v2.4";
+		fjs.parentNode.insertBefore(js, fjs);
+	}(document, 'script', 'facebook-jssdk'));
+	</script>
+	
+	<script>
+	!function(d,s,id){
+		var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';
+		if(!d.getElementById(id)) {
+			js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);
+		}
+	} (document, 'script', 'twitter-wjs');
+	</script>
+<?php
+}
+
+function shortcode()
+{
+	wp_enqueue_script('google') ;
+	ob_start() ;
+?>
+	<div class="xdevl_social">
+		<div class="social-panel">
+			<span>
+				<div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/"
+					data-layout="button_count" data-action="like" data-show-faces="false" data-share="true"></div>
+			</span>
+			<span>
+				<div class="g-plusone" data-annotation="none"></div>
+				<div class="g-plus" data-action="share" data-annotation="bubble" data-height="24"></div>
+			</span>
+			<span>
+				<a href="https://twitter.com/share" class="twitter-share-button">Tweet</a>
+			</span>
+		</div>
+	</div>
+	
+<?php 
+	return ob_get_clean() ;
+}
+
 add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
 add_action('login_form',__NAMESPACE__.'\echo_login_form') ;
@@ -409,10 +461,17 @@ add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
 add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
 add_filter('wp_loaded',__NAMESPACE__.'\wp_loaded') ;
 
+
 if(is_admin())
 {
 	add_action('admin_menu',__NAMESPACE__.'\admin_menu') ;
 	add_action('admin_init',__NAMESPACE__.'\admin_init') ;
+
+}
+else
+{
+	add_action('wp_footer',__NAMESPACE__.'\wp_footer') ;
+	add_shortcode(PLUGIN_NAMESPACE,__NAMESPACE__.'\shortcode') ;
 }
 
 } //end xdevl\social
