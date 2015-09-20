@@ -260,10 +260,10 @@ function comment_form_defaults($defaults)
 			
 	$defaults['must_log_in']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.
 			// TODO: the # doesn't when redirected back after authentication, use jquery instead to scroll the page.
-			'To post a comment, authenticate using one of the following providers:'.providers_panel($_SERVER['REQUEST_URI'].'#respond').'</div>' ;
+			'To post a comment, authenticate using one of the following providers:'.providers_panel($_SERVER['REQUEST_URI']).'</div>' ;
 			
 	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.'Authenticate using one of the following providers:'.
-			providers_panel($_SERVER['REQUEST_URI'].'#respond').'</div><p>Or enter the following information:</p>' ;
+			providers_panel($_SERVER['REQUEST_URI']).'</div><p>Or enter the following information:</p>' ;
 
 	return $defaults ;
 }
@@ -422,6 +422,12 @@ function wp_footer()
 		}
 	} (document, 'script', 'twitter-wjs');
 	</script>
+	
+	<?php if(isset($_GET[URL_PARAM_PROVIDER])): ?>
+	<script>
+		jQuery('html,body').scrollTop(jQuery("#respond").offset().top) ;
+	</script>
+	<?php endif; ?>
 <?php
 }
 
