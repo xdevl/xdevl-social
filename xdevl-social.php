@@ -440,7 +440,7 @@ function shortcode()
 	<div class="xdevl_social">
 		<div class="social-panel">
 			<span>
-				<div class="fb-like" data-href="https://developers.facebook.com/docs/plugins/"
+				<div class="fb-like"
 					data-layout="button_count" data-action="like" data-show-faces="false" data-share="true"></div>
 			</span>
 			<span>
