@@ -33,3 +33,9 @@
 {
 	vertical-align: baseline !important ;
 }
+
+img.pin-interest
+{
+	vertical-align: baseline ;
+	margin: 0 0.2rem ;
+}

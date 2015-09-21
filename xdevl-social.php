@@ -208,6 +208,7 @@ function wp_enqueue_scripts()
 	wp_enqueue_style(PLUGIN_NAMESPACE.'_style') ;
 	
 	wp_register_script('google','https://apis.google.com/js/platform.js',array(),null,true) ;
+	wp_register_script('pininterest','//assets.pinterest.com/js/pinit.js',array(),null,true) ;
 }
 
 function login_form()
@@ -449,6 +450,11 @@ function shortcode()
 			</span>
 			<span>
 				<a href="https://twitter.com/share" class="twitter-share-button">Tweet</a>
+			</span>
+			<span>
+				<a href="//www.pinterest.com/pin/create/button/" data-pin-do="buttonBookmark"  data-pin-color="red" data-pin-height="28">
+					<img class="pin-interest" src="//assets.pinterest.com/images/pidgets/pinit_fg_en_rect_red_20.png" />
+				</a>
 			</span>
 		</div>
 	</div>
