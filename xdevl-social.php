@@ -50,6 +50,12 @@ define(__NAMESPACE__.'\URL_PARAM_PROVIDER',PLUGIN_NAMESPACE.'_provider') ;
 define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
 define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauthdev/') ;
 
+class Data
+{
+	public static $login_guard=false ;
+	public static $login_error="" ;
+}
+
 function list_providers()
 {
 	$providers=array() ;
@@ -251,9 +257,7 @@ function comment_form_default_fields($fields)
 
 function comment_form_defaults($defaults)
 {
-	global $login_error ;
-	
-	$error=empty($login_error)?'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'alert-box alert':'xdevl_alert-box xdevl_alert').'">'.$login_error.'</div> ' ;
+	$error=empty(Data::$login_error)?'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'alert-box alert':'xdevl_alert-box xdevl_alert').'">'.Data::$login_error.'</div> ' ;
 	
 	//$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.$error.
 			//'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
@@ -361,9 +365,7 @@ function create_user($provider, $userProfile)
 
 function social_authenticate($provider)
 {
-	global $login_guard ;
-	$login_guard=true ;
-	
+	Data::$login_guard=true ;
 	try {
 		require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
 		$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
@@ -390,20 +392,18 @@ function social_authenticate($provider)
 
 function authenticate($user, $username, $password)
 {
-	global $login_guard ;
-	if(!$login_guard && isset($_GET[URL_PARAM_PROVIDER]))
+	if(!Data::$login_guard && isset($_GET[URL_PARAM_PROVIDER]))
 		return social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
 }
 
 function wp_loaded()
 {
-	global $login_error, $login_guard ;
-	if(!$login_guard && !is_user_logged_in() && isset($_GET[URL_PARAM_PROVIDER]))
+	if(!Data::$login_guard && !is_user_logged_in() && isset($_GET[URL_PARAM_PROVIDER]))
 	{
 		$user=social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
 		if(!is_wp_error($user))
 			wp_set_current_user($user->ID) ;
-		else $login_error=$user->get_error_message() ;
+		else Data::$login_error=$user->get_error_message() ;
 	}
 }
 
