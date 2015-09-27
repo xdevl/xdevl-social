@@ -359,43 +359,48 @@ function create_user($provider, $userProfile)
 	else return $result ;
 }
 
+function social_authenticate($provider)
+{
+	global $login_guard ;
+	$login_guard=true ;
+	
+	try {
+		require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
+		$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
+		$adapter=$hybridauth->authenticate($provider) ;
+		$userProfile=$adapter->getUserProfile() ;
+		
+		$lookup=user_lookup($provider,$userProfile) ;
+		if($lookup[1]==MatchType::NONE)
+			return create_user($provider,$userProfile) ;
+		else if($lookup[1]==MatchType::EMAIL)
+		{
+			$providers=user_providers($lookup[0]) ;
+			if(count($providers)>0)
+				throw new \Exception('Your Email address is already associated with a '.get_provider_from_id_meta_key($providers[0]).' account') ;
+			else throw new \Exception('Your Email address is already used by another user') ;
+		}
+		else return get_user_by('id',$lookup[0]) ;
+		
+	} catch(\Exception $e) {
+		wp_logout() ;
+		return new \WP_Error('login_failed', __( '<strong>Login failed</strong>: '.$e->getMessage())) ;
+	}
+}
+
 function authenticate($user, $username, $password)
 {
-	// TODO: be sure the following gets called only once per page load
-	if(isset($_GET[URL_PARAM_PROVIDER])) 
-	{
-		$provider=$_GET[URL_PARAM_PROVIDER] ;
-		try {
-			require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
-			$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
-			$adapter=$hybridauth->authenticate($_GET[URL_PARAM_PROVIDER]) ;
-			$userProfile=$adapter->getUserProfile() ;
-			
-			$lookup=user_lookup($provider,$userProfile) ;
-			if($lookup[1]==MatchType::NONE)
-				return create_user($provider,$userProfile) ;
-			else if($lookup[1]==MatchType::EMAIL)
-			{
-				$providers=user_providers($lookup[0]) ;
-				if(count($providers)>0)
-					throw new \Exception('Your Email address is already associated with a '.get_provider_from_id_meta_key($providers[0]).' account') ;
-				else throw new \Exception('Your Email address is already used by another user') ;
-			}
-			else return get_user_by('id',$lookup[0]) ;
-			
-		} catch(\Exception $e) {
-			wp_logout() ;
-			return new \WP_Error('login_failed', __( '<strong>Login failed</strong>: '.$e->getMessage())) ;
-		}
-	}	
+	global $login_guard ;
+	if(!$login_guard && isset($_GET[URL_PARAM_PROVIDER]))
+		return social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
 }
 
 function wp_loaded()
 {
-	global $login_error ;
-	if(!is_user_logged_in())
+	global $login_error, $login_guard ;
+	if(!$login_guard && !is_user_logged_in() && isset($_GET[URL_PARAM_PROVIDER]))
 	{
-		$user=wp_signon() ;
+		$user=social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
 		if(!is_wp_error($user))
 			wp_set_current_user($user->ID) ;
 		else $login_error=$user->get_error_message() ;
