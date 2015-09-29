@@ -52,8 +52,8 @@ define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauthdev/') ;
 
 class Data
 {
-	public static $login_guard=false ;
-	public static $login_error="" ;
+	public static $user=null ;
+	public static $wp_login=false ;
 }
 
 function list_providers()
@@ -72,7 +72,6 @@ function list_providers()
 
 function providers_panel($url)
 {
-	// TODO: keep all query args
 	$params=empty($_REQUEST[URL_PARAM_REDIRECT_TO])?array():array(URL_PARAM_REDIRECT_TO=>$_REQUEST[URL_PARAM_REDIRECT_TO]) ;
 	$providersPanel='<div class="social-panel">' ;
 	$activeProviders=get_option(PLUGIN_SETTINGS_ACTIVE_PROVIDERS) ;
@@ -257,14 +256,14 @@ function comment_form_default_fields($fields)
 
 function comment_form_defaults($defaults)
 {
-	$error=empty(Data::$login_error)?'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'alert-box alert':'xdevl_alert-box xdevl_alert').'">'.Data::$login_error.'</div> ' ;
+	$error=Data::$wp_login || !is_wp_error(Data::$user)?
+		'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'alert-box alert':'xdevl_alert-box xdevl_alert').'">'.Data::$user->get_error_message().'</div> ' ;
 	
 	//$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.$error.
 			//'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
 			//'">log in</a> or authenticate using one of the following providers:'.providers_panel(get_permalink().'#respond').'</div>' ;
 			
 	$defaults['must_log_in']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.
-			// TODO: the # doesn't when redirected back after authentication, use jquery instead to scroll the page.
 			'To post a comment, authenticate using one of the following providers:'.providers_panel($_SERVER['REQUEST_URI']).'</div>' ;
 			
 	$defaults['comment_notes_before']='<div class="'.PLUGIN_NAMESPACE.'">'.$error.'Authenticate using one of the following providers:'.
@@ -365,45 +364,51 @@ function create_user($provider, $userProfile)
 
 function social_authenticate($provider)
 {
-	Data::$login_guard=true ;
-	try {
-		require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
-		$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
-		$adapter=$hybridauth->authenticate($provider) ;
-		$userProfile=$adapter->getUserProfile() ;
-		
-		$lookup=user_lookup($provider,$userProfile) ;
-		if($lookup[1]==MatchType::NONE)
-			return create_user($provider,$userProfile) ;
-		else if($lookup[1]==MatchType::EMAIL)
-		{
-			$providers=user_providers($lookup[0]) ;
-			if(count($providers)>0)
-				throw new \Exception('Your Email address is already associated with a '.get_provider_from_id_meta_key($providers[0]).' account') ;
-			else throw new \Exception('Your Email address is already used by another user') ;
+	if(Data::$user===null)
+	{
+		try {
+			require_once(plugin_dir_path(__FILE__).HYBRIDAUTH_DIR.'Hybrid/Auth.php') ;
+			$hybridauth=new \Hybrid_Auth(get_HybridAuth_config()) ;
+			$adapter=$hybridauth->authenticate($provider) ;
+			$userProfile=$adapter->getUserProfile() ;
+			
+			$lookup=user_lookup($provider,$userProfile) ;
+			if($lookup[1]==MatchType::NONE)
+				Data::$user=create_user($provider,$userProfile) ;
+			else if($lookup[1]==MatchType::EMAIL)
+			{
+				$providers=user_providers($lookup[0]) ;
+				if(count($providers)>0)
+					throw new \Exception('Your Email address is already associated with a '.get_provider_from_id_meta_key($providers[0]).' account') ;
+				else throw new \Exception('Your Email address is already used by another user') ;
+			}
+			else Data::$user=get_user_by('id',$lookup[0]) ;
+			
+		} catch(\Exception $e) {
+			wp_logout() ;
+			Data::$user=new \WP_Error('login_failed', __( '<strong>Login failed</strong>: '.$e->getMessage())) ;
 		}
-		else return get_user_by('id',$lookup[0]) ;
-		
-	} catch(\Exception $e) {
-		wp_logout() ;
-		return new \WP_Error('login_failed', __( '<strong>Login failed</strong>: '.$e->getMessage())) ;
 	}
+	
+	return Data::$user ;
 }
 
 function authenticate($user, $username, $password)
 {
-	if(!Data::$login_guard && isset($_GET[URL_PARAM_PROVIDER]))
+	if(isset($_GET[URL_PARAM_PROVIDER]))
+	{
+		Data::$wp_login=true ;
 		return social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
+	}
 }
 
 function wp_loaded()
 {
-	if(!Data::$login_guard && !is_user_logged_in() && isset($_GET[URL_PARAM_PROVIDER]))
+	if(!is_user_logged_in() && isset($_GET[URL_PARAM_PROVIDER]))
 	{
 		$user=social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
 		if(!is_wp_error($user))
 			wp_set_current_user($user->ID) ;
-		else Data::$login_error=$user->get_error_message() ;
 	}
 }
 
@@ -430,7 +435,7 @@ function wp_footer()
 	} (document, 'script', 'twitter-wjs');
 	</script>
 	
-	<?php if(isset($_GET[URL_PARAM_PROVIDER])): ?>
+	<?php if(isset($_GET[URL_PARAM_PROVIDER]) && !Data::$wp_login): ?>
 	<script>
 		jQuery('html,body').scrollTop(jQuery("#respond").offset().top) ;
 	</script>
@@ -468,18 +473,6 @@ function shortcode()
 	return ob_get_clean() ;
 }
 
-add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
-add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
-add_action('login_form',__NAMESPACE__.'\echo_login_form') ;
-add_action('wp_logout',__NAMESPACE__.'\wp_logout') ;
-add_filter('login_form_middle',__NAMESPACE__.'\login_form') ;
-add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
-add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
-add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
-add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
-add_filter('wp_loaded',__NAMESPACE__.'\wp_loaded') ;
-
-
 if(is_admin())
 {
 	add_action('admin_menu',__NAMESPACE__.'\admin_menu') ;
@@ -488,6 +481,16 @@ if(is_admin())
 }
 else
 {
+	add_action('wp_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
+	add_action('login_enqueue_scripts',__NAMESPACE__.'\wp_enqueue_scripts') ;
+	add_action('login_form',__NAMESPACE__.'\echo_login_form') ;
+	add_action('wp_logout',__NAMESPACE__.'\wp_logout') ;
+	add_filter('login_form_middle',__NAMESPACE__.'\login_form') ;
+	add_action('comment_form_default_fields',__NAMESPACE__.'\comment_form_default_fields') ;
+	add_action('comment_form_defaults',__NAMESPACE__.'\comment_form_defaults') ;
+	add_filter('show_password_fields',__NAMESPACE__.'\show_password_fields',10,2) ;
+	add_filter('authenticate',__NAMESPACE__.'\authenticate',10,3) ;
+	add_filter('wp_loaded',__NAMESPACE__.'\wp_loaded') ;
 	add_action('wp_footer',__NAMESPACE__.'\wp_footer') ;
 	add_shortcode(PLUGIN_NAMESPACE,__NAMESPACE__.'\shortcode') ;
 }
