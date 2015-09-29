@@ -408,7 +408,10 @@ function wp_loaded()
 	{
 		$user=social_authenticate($_GET[URL_PARAM_PROVIDER]) ;
 		if(!is_wp_error($user))
+		{
 			wp_set_current_user($user->ID) ;
+			wp_set_auth_cookie($user->ID) ;
+		}
 	}
 }
 
