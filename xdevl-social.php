@@ -48,7 +48,7 @@ define(__NAMESPACE__.'\URL_PARAM_PROVIDER',PLUGIN_NAMESPACE.'_provider') ;
 
 // Others
 define(__NAMESPACE__.'\PHP_EXTENSION','.php') ;
-define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauthdev/') ;
+define(__NAMESPACE__.'\HYBRIDAUTH_DIR','hybridauth/') ;
 
 class Data
 {
