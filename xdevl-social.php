@@ -143,7 +143,7 @@ class ProviderSettings
 function admin_init()
 {
 	add_settings_section(PLUGIN_SETTINGS,'Plugin settings',null,PLUGIN_SETTINGS) ;
-	add_settings_field(PLUGIN_SETTINGS_FOUNDATION_ALERT,'Use foundation alert styles:', __NAMESPACE__.'\foundation_styles_callback',PLUGIN_SETTINGS,PLUGIN_SETTINGS,PLUGIN_SETTINGS_FOUNDATION_ALERT) ;
+	add_settings_field(PLUGIN_SETTINGS_FOUNDATION_ALERT,'Use foundation 6 alert styles:', __NAMESPACE__.'\foundation_styles_callback',PLUGIN_SETTINGS,PLUGIN_SETTINGS,PLUGIN_SETTINGS_FOUNDATION_ALERT) ;
 	register_setting(PLUGIN_SETTINGS,PLUGIN_SETTINGS_FOUNDATION_ALERT) ;
 	
 	foreach(list_providers() as $provider)
@@ -257,7 +257,7 @@ function comment_form_default_fields($fields)
 function comment_form_defaults($defaults)
 {
 	$error=Data::$wp_login || !is_wp_error(Data::$user)?
-		'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'alert-box alert':'xdevl_alert-box xdevl_alert').'">'.Data::$user->get_error_message().'</div> ' ;
+		'':'<div class="'.(get_option(PLUGIN_SETTINGS_FOUNDATION_ALERT)?'callout alert':'xdevl_alert-box xdevl_alert').'">'.Data::$user->get_error_message().'</div> ' ;
 	
 	//$defaults['must_log_in']='<div class="must-log-in '.PLUGIN_NAMESPACE.'">'.$error.
 			//'To comment, <a href="'.wp_login_url(apply_filters('the_permalink',get_permalink( ))).
